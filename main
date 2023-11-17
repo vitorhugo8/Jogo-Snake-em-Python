@@ -1,0 +1,98 @@
+import pygame
+import random
+
+# Iniciar o Jogo e Principais Características
+pygame.init()
+pygame.display.set_caption("Jogo Snake em Python")
+largura, altura = 600, 400
+tela = pygame.display.set_mode((largura, altura))
+tempo = pygame.time.Clock()
+
+# Cores
+preto = (0, 0, 0)
+branco = (255, 255, 255)
+verde = (0, 255, 0)
+
+# Parâmetros da Cobra
+velocidade_jogo = 15
+tamanho_quadrado = 10
+tamanho_cobra = 1
+
+# Função para gerar comida
+def gerar_comida():
+    comida_x = round(random.randrange(0, largura - tamanho_quadrado) / 10.0) * 10.0
+    comida_y = round(random.randrange(0, altura - tamanho_quadrado) / 10.0) * 10.0
+    return comida_x, comida_y
+
+# Desenhos da Comida
+def desenhar_comida(tamanho_quadrado, comida_x, comida_y):
+    pygame.draw.rect(tela, verde, (comida_x, comida_y, tamanho_quadrado, tamanho_quadrado))
+
+# Desenho da Cobra
+def desenhar_cobra(tamanho_quadrado, pixels):   
+    for pixel in pixels:
+        pygame.draw.rect(tela, branco, (pixel[0], pixel[1], tamanho_quadrado, tamanho_quadrado))
+
+# Parâmetros de Movimentação da Cobra
+def selecionar_velocidade(evento, velocidade_atual):
+    if evento.type == pygame.KEYDOWN:
+        if evento.key == pygame.K_UP and velocidade_atual != (0, tamanho_quadrado):
+            return 0, -tamanho_quadrado
+        elif evento.key == pygame.K_DOWN and velocidade_atual != (0, -tamanho_quadrado):
+            return 0, tamanho_quadrado
+        elif evento.key == pygame.K_LEFT and velocidade_atual != (tamanho_quadrado, 0):
+            return -tamanho_quadrado, 0
+        elif evento.key == pygame.K_RIGHT and velocidade_atual != (-tamanho_quadrado, 0):
+            return tamanho_quadrado, 0
+    return velocidade_atual
+
+# Parâmetros para quando jogo estiver rodando
+def rodar_jogo():
+    janela_aberta = True
+    pixels = []
+    x, y = largura // 2, altura // 2
+    velocidade_x, velocidade_y = tamanho_quadrado, 0
+    comida_x, comida_y = gerar_comida()
+
+    while janela_aberta:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                janela_aberta = False
+            velocidade_x, velocidade_y = selecionar_velocidade(event, (velocidade_x, velocidade_y))
+
+        pygame.time.delay(50)
+        tela.fill(preto)
+
+        desenhar_comida(tamanho_quadrado, comida_x, comida_y)
+
+        # Cobra andando
+        pixels.append([x, y])
+        if len(pixels) > tamanho_cobra:
+            del pixels[0]
+
+        # Caso a cobra bata nela mesma
+        for pixel in pixels[:-1]:
+            if pixel == [x, y]:
+                janela_aberta = False
+
+        desenhar_cobra(tamanho_quadrado, pixels)
+
+        # Atualizar posição da Cobra
+        x += velocidade_x
+        y += velocidade_y
+
+        # Parâmetros para aumentar o Tamanho da Cobra em relação ao que ela come
+        if x == comida_x and y == comida_y:
+            tamanho_cobra += 1
+            comida_x, comida_y = gerar_comida()
+
+        desenhar_pontos(tamanho_cobra)
+
+        # Atualização da Tela (movida para fora do loop)
+        pygame.display.update()
+
+    pygame.quit()
+
+# Chamar a função rodar_jogo apenas após o fim do while
+rodar_jogo()
+
